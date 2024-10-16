@@ -10,7 +10,7 @@ SpringIntegration을 활용하여 syslog 수집
 a. Spring Integration + Spring batch를 활용하여 장비 노드의 Log 메세지를 가져올 수 있는 Syslog 모듈을 개발
 b. 고객사에 배포하여 테스트 진행
 
-```
+```java
 @Configuration
 @EnableBatchProcessing
 @RequiredArgsConstructor
