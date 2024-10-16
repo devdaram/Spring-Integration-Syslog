@@ -1,24 +1,18 @@
-# Spring-Integration-Syslog
-SpringIntegration을 활용하여 syslog 수집
+<h3>💻 사용 언어 환경</h3>
+  
+    1. Java 21
+    2. Springboot 3.3.1
 
-- 주요 업무: Syslog 모듈 개발 및 배포
-- 기술 스택 : Java, Springboot, Angular.js, Mybatis, PostgreSQL, Jenkins, Eureaka
-- 개발 환경 : IntelliJ, Github, JIRA confluence, postman, swagger, DBeaver
-- 업무 기간 : 2022.02 ~ 2022.03
-- 개발 인원 : 3인
-- 상세 내용 :
-a. Spring Integration + Spring batch를 활용하여 장비 노드의 Log 메세지를 가져올 수 있는 Syslog 모듈을 개발
-b. 고객사에 배포하여 테스트 진행
+<h1>✨ 맡은 업무 설명</h1>
+<h3> Syslog 모듈 개발 </h3>
+  
+     - Spring Integration + Spring batch를 활용하여 장비 노드의 Log 메세지를 가져올 수 있는 Syslog 모듈을 개발
 
 ```java
-@Configuration
-@EnableBatchProcessing
-@RequiredArgsConstructor
-@EnableIntegration
-@Slf4j
+//코드일부 수정발췌
+//지속적으로 들어오는 메세지를 수집하여 파일로 생성하는 기능
 public class SyslogConfig extends DefaultBatchConfigurer {
 
-    //private Job job; //순환참조 됨
     private final JobLauncher jobLauncher;
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
@@ -55,17 +49,16 @@ public class SyslogConfig extends DefaultBatchConfigurer {
     @Bean
     public IntegrationFlow integrationFlow() {
         return IntegrationFlows.from(
-                  Files.tailAdapter(new File("/var/log/syslog"))
-                  //Files.tailAdapter(new File("/Users/juyeong/Downloads/hello/hello.txt")) //local test
+                  Files.tailAdapter(new File("{파일위치}"))
                         .delay(1000)
-                        .end(false) //If true, tail from the end of the file, otherwise include all lines from the beginning.
+                        .end(false)
                         .reopen(true)
                         .fileDelay(1000)
                         .id("tailer")
                         .autoStartup(true)
                 )
                 .log()
-                .filter(String.class, s -> s.contains("장비이름")) //장비이름관련된 로그만 가져올 수 있도록 필터링 처리
+                .filter({필터조건}) 
                 .channel(tailChannel())
                 .get();
     }
@@ -96,7 +89,7 @@ public class SyslogConfig extends DefaultBatchConfigurer {
 
            String seqId = syslogInsertMapper.selectSeqId();
 
-           if(item.getFullmsg().contains("새로운 노드 등록됨")){
+           if(item.getFullmsg().contains("{특정 토픽}")){
                try {
                    syslogService.kafkaProducer(seqId);
                     log.info(" new node seqId : {}", seqId);
@@ -108,30 +101,6 @@ public class SyslogConfig extends DefaultBatchConfigurer {
            log.info("detected new Node log : {}", item.getFullmsg());
         });
 
-    }
-
-    @Bean
-    @StepScope
-    public FlatFileItemReader<SyslogDataFormat> itemReader(@Value("#{jobParameters[payload]}") String resource){
-        FlatFileItemReader<SyslogDataFormat> reader = new FlatFileItemReader<>();
-        /*FileSystemResource fileSystemResource = new FileSystemResource(resource);
-        reader.setResource(fileSystemResource);*/
-        Resource resource1 = new ByteArrayResource(resource.getBytes(StandardCharsets.UTF_8));
-        reader.setResource(resource1);
-
-        log.info("converted log(utf-8) : {}", resource1);
-        //String fileName = fileSystemResource.getFilename();
-
-        DefaultLineMapper lineMapper = new DefaultLineMapper<>();
-        DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer();
-        delimitedLineTokenizer.setDelimiter("|");
-        delimitedLineTokenizer.setStrict(true);
-        lineMapper.setLineTokenizer(delimitedLineTokenizer);
-        lineMapper.setFieldSetMapper(new SyslogFileDataFieldSetMapper(null));
-
-        reader.setLineMapper(lineMapper);
-
-        return reader;
     }
 }
 
