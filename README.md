@@ -13,12 +13,6 @@
 //지속적으로 들어오는 메세지를 수집하여 파일로 생성하는 기능
 public class SyslogConfig extends DefaultBatchConfigurer {
 
-    private final JobLauncher jobLauncher;
-    private final JobBuilderFactory jobBuilderFactory;
-    private final StepBuilderFactory stepBuilderFactory;
-    private final SyslogInsertMapper syslogInsertMapper;
-    private final SyslogService syslogService;
-
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata defaultPoller() {
         PollerMetadata pollerMetadata = new PollerMetadata();
